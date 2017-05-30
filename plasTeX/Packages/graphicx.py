@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, re
+import os, re, subprocess
 from plasTeX import Command
 
 from plasTeX.Packages.graphics import DeclareGraphicsExtensions, graphicspath
@@ -25,6 +25,7 @@ class includegraphics(Command):
         for p in paths:
             for e in ['']+ext:
                 fname = os.path.join(p,f+e)
+                print("[YYY] looking for", fname, os.getcwd())
                 if os.path.isfile(fname):
                     img = os.path.abspath(fname)
                     break
@@ -42,12 +43,23 @@ class includegraphics(Command):
 
         options = self.attributes['options']
 
+        try:
+            from PIL import Image
+            Image.open(img)
+        except:
+            print("[ZZZ] converting image")
+            name, extension = os.path.splitext(img)
+            if extension == ".pdf":
+                subprocess.call(["convert", img, name + ".png"])
+                img = name + ".png"
+
         if options is not None:
             
             scale = options.get('scale')
             if scale is not None:
                 scale = float(scale)
                 from PIL import Image
+                print("[XXX] looking for image", img, f)
                 w, h = Image.open(img).size
                 self.style['width'] = '%spx' % (w * scale)
                 self.style['height'] = '%spx' % (h * scale)
