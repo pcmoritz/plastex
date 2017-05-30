@@ -567,7 +567,8 @@ class Imager(object):
 
         # Compile LaTeX source, then convert the output
         self.source.seek(0)
-        output = self.compileLatex(self.source.read())
+        content = self.source.read()
+        output = self.compileLatex(content)
         if output is None:
             log.error('Compilation of the document containing the images failed.  No output file was found.')
             return
@@ -612,18 +613,10 @@ class Imager(object):
             program = self.compiler
 
         cmd = r'%s %s' % (program, filename)
-        p = subprocess.Popen(shlex.split(cmd),
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.STDOUT,
-                     universal_newlines=True
-                     )
-        while True:
-            line = p.stdout.readline()
-            done = p.poll()
-            if line:
-                imagelog.info(line.strip())
-            elif done is not None:
-                break
+        try:
+            p = subprocess.check_call(shlex.split(cmd))
+        except:
+            print("[ERROR] LaTeX run not successful")
 
         output = None
         for ext in ['.dvi','.pdf','.ps']:
